@@ -14,7 +14,6 @@ export const toggleReservation = produce((draft, giftId) => {
       : gift.reservedBy === original(draft.currentUser).id
       ? undefined
       : gift.reservedBy;
-  return draft;
 });
 
 export const getInitialState = () => ({
