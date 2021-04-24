@@ -1,4 +1,6 @@
 import produce from "immer";
+import { allUsers, getCurrentUser } from "./misc/users";
+import defaultGifts from "./misc/gifts.json";
 
 export const addGift = (state, id, description, image) => {
   return produce(state, (draft) => {
@@ -18,3 +20,9 @@ export const toggleReservation = (state, giftId) => {
     return draft;
   });
 };
+
+export const getInitialState = () => ({
+  users: allUsers,
+  currentUser: getCurrentUser(),
+  gifts: defaultGifts,
+});
