@@ -63,8 +63,4 @@ describe("reserving an already reserved gift", () => {
   test("preserves stored reservedBy", () => {
     expect(nextState.gifts[0].reservedBy).toBe(2);
   });
-
-  test("didn't modify the original state", () => {
-    expect(initialState.gifts[0].reservedBy).toBe(2);
-  });
 });
