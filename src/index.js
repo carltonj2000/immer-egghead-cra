@@ -62,6 +62,12 @@ const GiftList = () => {
     [stateUpdate]
   );
 
+  const handleReset = () => {
+    stateUpdate((draft) => {
+      return getInitialState();
+    });
+  };
+
   return (
     <div className="app">
       <div className="header">
@@ -69,6 +75,7 @@ const GiftList = () => {
       </div>
       <div className="actions">
         <button onClick={handleAdd}>Add</button>
+        <button onClick={handleReset}>Reset</button>
       </div>
       <div className="gifts">
         {gifts.map((gift) => (
