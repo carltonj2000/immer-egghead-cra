@@ -34,16 +34,17 @@ const GiftList = () => {
   const handleAdd = () => {
     const description = prompt("Gift to add");
     if (description) {
-      stateUpdate((draft) => {
-        draft.gifts.push({
-          id: uuidv4(),
-          description,
-          image: `https://picsum.photos/id/${Math.round(
-            Math.random() * 1000
-          )}/200/200`,
-          reservedBy: undefined,
-        });
-      });
+      stateUpdate(
+        (draft) =>
+          void draft.gifts.push({
+            id: uuidv4(),
+            description,
+            image: `https://picsum.photos/id/${Math.round(
+              Math.random() * 1000
+            )}/200/200`,
+            reservedBy: undefined,
+          })
+      );
     }
   };
 
