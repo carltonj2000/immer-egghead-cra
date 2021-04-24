@@ -33,7 +33,7 @@ const initialState = {
   ],
 };
 
-describe("Reserving an unreserved gift", () => {
+describe("Adding a gift", () => {
   const nextState = addGift(initialState, "mug", "coffee mug", "");
 
   test("added a gift to teh collection", () => {
@@ -54,6 +54,12 @@ describe("reserving an unreserved gift", () => {
 
   test("didn't modify the original state", () => {
     expect(initialState.gifts[1].reservedBy).toBe(undefined);
+  });
+
+  test("does structurally share unchanged part of the state tree", () => {
+    expect(nextState).not.toBe(initialState);
+    expect(nextState.gifts[1]).not.toBe(initialState.gifts[1]);
+    expect(nextState.gifts[0]).toBe(initialState.gifts[0]);
   });
 });
 

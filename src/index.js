@@ -6,7 +6,7 @@ import "./misc/index.css";
 
 import { getInitialState, addGift, toggleReservation } from "./gifts";
 
-const Gift = ({ gift, users, currentUser, onReserve }) => {
+const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
   return (
     <div className={`gift ${gift.reservedBy ? "reserved" : ""}`}>
       <img src={gift.image} alt={gift.description} />
@@ -24,7 +24,7 @@ const Gift = ({ gift, users, currentUser, onReserve }) => {
       </div>
     </div>
   );
-};
+});
 
 const GiftList = () => {
   const [state, stateSet] = React.useState(getInitialState());
@@ -43,9 +43,9 @@ const GiftList = () => {
       );
     }
   };
-  const handleReserve = (id) => {
+  const handleReserve = React.useCallback((id) => {
     stateSet((state) => toggleReservation(state, id));
-  };
+  }, []);
 
   return (
     <div className="app">
