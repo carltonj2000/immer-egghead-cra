@@ -1,11 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { v4 as uuidv4 } from "uuid";
-import { useImmer } from "use-immer";
 
 import "./misc/index.css";
 
-import { getInitialState } from "./gifts";
+import { addBook, addGift, getInitialState, toggleReservation } from "./gifts";
 
 const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
   return (
@@ -28,45 +27,38 @@ const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
 });
 
 const GiftList = () => {
-  const [state, stateUpdate] = useImmer(() => getInitialState());
+  const [state, stateSet] = React.useState(getInitialState());
   const { users, gifts, currentUser } = state;
 
   const handleAdd = () => {
     const description = prompt("Gift to add");
     if (description) {
-      stateUpdate(
-        (draft) =>
-          void draft.gifts.push({
-            id: uuidv4(),
-            description,
-            image: `https://picsum.photos/id/${Math.round(
-              Math.random() * 1000
-            )}/200/200`,
-            reservedBy: undefined,
-          })
+      stateSet((state) =>
+        addGift(
+          state,
+          uuidv4(),
+          description,
+          `https://picsum.photos/id/${Math.round(Math.random() * 1000)}/200/200`
+        )
       );
     }
   };
 
   const handleReserve = React.useCallback(
     (id) => {
-      stateUpdate((draft) => {
-        const gift = draft.gifts.find((gift) => gift.id === id);
-        gift.reservedBy =
-          gift.reservedBy === undefined
-            ? draft.currentUser.id
-            : gift.reservedBy === draft.currentUser.id
-            ? undefined
-            : gift.reservedBy;
-      });
+      stateSet((state) => toggleReservation(state, id));
     },
-    [stateUpdate]
+    [stateSet]
   );
 
-  const handleReset = () => {
-    stateUpdate((draft) => {
-      return getInitialState();
-    });
+  const handleReset = () => stateSet(getInitialState());
+
+  const handleAddBook = async () => {
+    const isbn = prompt("Enter ISBN number", "0201558025");
+    if (isbn) {
+      const newState = await addBook(state, isbn);
+      stateSet(newState);
+    }
   };
 
   return (
@@ -76,6 +68,7 @@ const GiftList = () => {
       </div>
       <div className="actions">
         <button onClick={handleAdd}>Add</button>
+        <button onClick={handleAddBook}>Add Book</button>
         <button onClick={handleReset}>Reset</button>
       </div>
       <div className="gifts">

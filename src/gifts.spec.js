@@ -1,4 +1,4 @@
-import { addGift, toggleReservation } from "./gifts";
+import { addBook, addGift, toggleReservation, getBookDetails } from "./gifts";
 
 const initialState = {
   users: [
@@ -80,5 +80,25 @@ describe("reserving an already reserved gift", () => {
     expect(initialState.gifts[0]).toEqual(nextState.gifts[0]);
     expect(initialState.gifts[0]).toBe(nextState.gifts[0]);
     expect(initialState).toBe(nextState);
+  });
+});
+
+describe("can add a book async", () => {
+  test("can add math book", async () => {
+    const nextState = await addBook(
+      initialState,
+      await getBookDetails("0201558025")
+    );
+    expect(nextState.gifts[2].description).toBe("Concrete mathematics");
+  });
+
+  test("can add two books in parallel", async () => {
+    const promise1 = getBookDetails("0201558025");
+    const promise2 = getBookDetails("9781598560169");
+    const nextState = await addBook(
+      await addBook(initialState, await promise1),
+      await promise2
+    );
+    expect(nextState.gifts.length).toBe(4);
   });
 });
