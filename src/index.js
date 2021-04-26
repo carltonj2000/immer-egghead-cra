@@ -4,7 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 
 import "./misc/index.css";
 
-import { getBookDetails, getInitialState, giftsReducer } from "./gifts";
+import {
+  getBookDetails,
+  getInitialState,
+  patchGeneratingGiftsReducer,
+} from "./gifts";
 
 const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
   return (
@@ -27,8 +31,15 @@ const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
 });
 
 const GiftList = () => {
-  const [state, dispatch] = React.useReducer(giftsReducer, getInitialState());
+  const [state, stateSet] = React.useState(getInitialState());
   const { users, gifts, currentUser } = state;
+
+  const dispatch = React.useCallback((action) => {
+    stateSet((currentState) => {
+      const [nextState] = patchGeneratingGiftsReducer(currentState, action);
+      return nextState;
+    });
+  }, []);
 
   const handleAdd = () => {
     const description = prompt("Gift to add");
@@ -46,7 +57,7 @@ const GiftList = () => {
 
   const handleReserve = React.useCallback(
     (id) => dispatch({ type: "TOGGLE_RESERVATION", id }),
-    []
+    [dispatch]
   );
 
   const handleReset = () => dispatch({ type: "RESET" });

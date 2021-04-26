@@ -1,4 +1,9 @@
-import { getBookDetails, giftsReducer, State } from "./gifts";
+import {
+  getBookDetails,
+  giftsReducer,
+  patchGeneratingGiftsReducer,
+  State,
+} from "./gifts";
 
 const initialState: State = {
   users: [
@@ -110,5 +115,26 @@ describe("can add a book async", () => {
     const addBook2 = { type: "ADD_BOOK", book: await promise2 };
     const nextState = [addBook1, addBook2].reduce(giftsReducer, initialState);
     expect(nextState.gifts.length).toBe(4);
+  });
+});
+
+describe("reserving an unreserved gift with patches", () => {
+  const [nextState, patches] = patchGeneratingGiftsReducer(initialState, {
+    type: "TOGGLE_RESERVATION",
+    id: "egghead_subscription",
+  });
+
+  test("correctly stores reservedBy", () => {
+    expect(nextState.gifts[1].reservedBy).toBe(1);
+  });
+
+  test("generates the correct patches", () => {
+    expect(patches).toEqual([
+      {
+        op: "replace",
+        path: ["gifts", 1, "reservedBy"],
+        value: 1,
+      },
+    ]);
   });
 });

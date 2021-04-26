@@ -1,6 +1,8 @@
-import produce, { Draft } from "immer";
+import produce, { Draft, produceWithPatches, enablePatches } from "immer";
 import { allUsers, getCurrentUser } from "./misc/users";
 import defaultGifts from "./misc/gifts.json";
+
+enablePatches();
 
 interface Gift {
   readonly id: string;
@@ -31,9 +33,16 @@ interface Book {
   };
 }
 
-export const giftsReducer = produce((draft: Draft<State>, action):
-  | State
-  | undefined => {
+type Action =
+  | { type: "ADD_GIFT"; id: string; description: string; image: string }
+  | { type: "TOGGLE_RESERVATION"; id: string }
+  | { type: "ADD_BOOK"; book: Book }
+  | { type: "RESET" };
+
+const giftsRecipe = (
+  draft: Draft<State>,
+  action: Action
+): State | undefined => {
   switch (action.type) {
     case "ADD_GIFT":
       const { id, description, image } = action;
@@ -64,7 +73,10 @@ export const giftsReducer = produce((draft: Draft<State>, action):
     case "RESET":
       return getInitialState();
   }
-});
+};
+export const giftsReducer = produce(giftsRecipe);
+
+export const patchGeneratingGiftsReducer = produceWithPatches(giftsRecipe);
 
 export const getInitialState = (): State => ({
   users: allUsers,
