@@ -7,6 +7,7 @@ import "./misc/index.css";
 import {
   getBookDetails,
   getInitialState,
+  giftsReducer,
   patchGeneratingGiftsReducer,
 } from "./gifts";
 import { useSocket } from "./misc/useSocket";
@@ -36,8 +37,9 @@ const GiftList = () => {
   const { users, gifts, currentUser } = state;
 
   const send = useSocket("ws://localhost:5001", (patches) => {
-    //
-    console.dir(patches);
+    stateSet((state) =>
+      giftsReducer(state, { type: "APPLY_PATCHES", patches })
+    );
   });
 
   const dispatch = React.useCallback(

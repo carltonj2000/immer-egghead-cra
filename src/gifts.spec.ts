@@ -3,6 +3,7 @@ import {
   giftsReducer,
   patchGeneratingGiftsReducer,
   State,
+  applyPatches,
 } from "./gifts";
 
 const initialState: State = {
@@ -136,5 +137,15 @@ describe("reserving an unreserved gift with patches", () => {
         value: 1,
       },
     ]);
+  });
+
+  test("replaying patches produces the same state - 1", () => {
+    expect(applyPatches(initialState, patches)).toEqual(nextState);
+  });
+
+  test("replaying patches produces the same state - 2", () => {
+    expect(
+      giftsReducer(initialState, { type: "APPLY_PATCHES", patches })
+    ).toEqual(nextState);
   });
 });

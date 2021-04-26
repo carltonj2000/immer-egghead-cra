@@ -11,7 +11,9 @@ wss.on("connection", (ws) => {
   connections.push(ws);
 
   ws.on("message", (message) => {
-    console.log(message);
+    // line below is a hack fix for eliminating react sending duplicates
+    if (message === JSON.stringify([history[history.length - 1]]))
+      return console.log("duplicate skipped");
     history.push(...JSON.parse(message));
     connections
       .filter((client) => client !== ws)

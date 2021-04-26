@@ -1,8 +1,15 @@
-import produce, { Draft, produceWithPatches, enablePatches } from "immer";
+import produce, {
+  Draft,
+  produceWithPatches,
+  enablePatches,
+  applyPatches,
+} from "immer";
 import { allUsers, getCurrentUser } from "./misc/users";
 import defaultGifts from "./misc/gifts.json";
 
 enablePatches();
+
+export { applyPatches };
 
 interface Gift {
   readonly id: string;
@@ -33,11 +40,18 @@ interface Book {
   };
 }
 
+interface Patch {
+  op: "replace" | "add";
+  path: (string | number)[];
+  value?: any;
+}
+
 type Action =
   | { type: "ADD_GIFT"; id: string; description: string; image: string }
   | { type: "TOGGLE_RESERVATION"; id: string }
   | { type: "ADD_BOOK"; book: Book }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "APPLY_PATCHES"; patches: Patch[] };
 
 const giftsRecipe = (
   draft: Draft<State>,
@@ -72,6 +86,8 @@ const giftsRecipe = (
       break;
     case "RESET":
       return getInitialState();
+    case "APPLY_PATCHES":
+      return applyPatches(draft, action.patches);
   }
 };
 export const giftsReducer = produce(giftsRecipe);
