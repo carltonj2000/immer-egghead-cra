@@ -49,6 +49,14 @@ const GiftList = () => {
           currentState,
           action
         );
+        /*
+        let patchesOut = patches;
+        if (patches[0].value.currentUser) {
+          const { gifts, users } = patches[0].value;
+          patchesOut = [{ ...patches[0], value: { users, gifts } }];
+        }
+        console.log({ patchesOut, patches });
+        send(patchesOut);*/
         send(patches);
         return nextState;
       });
@@ -96,10 +104,10 @@ const GiftList = () => {
         <button onClick={handleReset}>Reset</button>
       </div>
       <div className="gifts">
-        {gifts.map((gift) => (
+        {Object.keys(gifts).map((id) => (
           <Gift
-            key={gift.id}
-            {...{ gift, users, currentUser }}
+            key={id}
+            {...{ gift: gifts[id], users, currentUser }}
             onReserve={handleReserve}
           />
         ))}

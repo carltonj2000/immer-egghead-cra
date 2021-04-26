@@ -21,22 +21,22 @@ const initialState: State = {
     id: 1,
     name: "Test user",
   },
-  gifts: [
-    {
+  gifts: {
+    immer_license: {
       id: "immer_license",
       description: "Immer license",
       image:
         "https://raw.githubusercontent.com/immerjs/immer/master/images/immer-logo.png",
       reservedBy: 2,
     },
-    {
+    egghead_subscription: {
       id: "egghead_subscription",
       description: "Egghead.io subscription",
       image:
         "https://pbs.twimg.com/profile_images/735242324293210112/H8YfgQHP_400x400.jpg",
       reservedBy: undefined,
     },
-  ],
+  },
 };
 
 describe("Adding a gift", () => {
@@ -47,66 +47,70 @@ describe("Adding a gift", () => {
     image: "",
   });
 
-  test("added a gift to teh collection", () => {
-    expect(nextState.gifts.length).toBe(3);
+  test("added a gift to the collection", () => {
+    expect(Object.keys(nextState.gifts).length).toBe(3);
   });
 
   test("didn't modify the original state", () => {
-    expect(initialState.gifts.length).toBe(2);
+    expect(Object.keys(initialState.gifts).length).toBe(2);
   });
 });
 
 describe("reserving an unreserved gift", () => {
+  const id = "egghead_subscription";
+  const id0 = "immer_license";
   const nextState = giftsReducer(initialState, {
     type: "TOGGLE_RESERVATION",
-    id: "egghead_subscription",
+    id,
   });
 
   test("correctly stores reservedBy", () => {
-    expect(nextState.gifts[1].reservedBy).toBe(1);
+    expect(nextState.gifts[id].reservedBy).toBe(1);
   });
 
   test("didn't modify the original state", () => {
-    expect(initialState.gifts[1].reservedBy).toBe(undefined);
+    expect(initialState.gifts[id].reservedBy).toBe(undefined);
   });
 
   test("does structurally share unchanged part of the state tree", () => {
     expect(nextState).not.toBe(initialState);
-    expect(nextState.gifts[1]).not.toBe(initialState.gifts[1]);
-    expect(nextState.gifts[0]).toBe(initialState.gifts[0]);
+    expect(nextState.gifts[id]).not.toBe(initialState.gifts[id]);
+    expect(nextState.gifts[id0]).toBe(initialState.gifts[id0]);
   });
 
   test("can't accidentally modify the produced state", () => {
     expect(() => {
-      nextState.gifts[1].reservedBy = undefined;
+      nextState.gifts[id].reservedBy = undefined;
     }).toThrow();
   });
 });
 
 describe("reserving an already reserved gift", () => {
+  const id = "immer_license";
   const nextState = giftsReducer(initialState, {
     type: "TOGGLE_RESERVATION",
-    giftId: "immer_license",
+    id,
   });
 
   test("preserves stored reservedBy", () => {
-    expect(nextState.gifts[0].reservedBy).toBe(2);
+    expect(nextState.gifts[id].reservedBy).toBe(2);
   });
 
   test("no new gift should be created", () => {
-    expect(initialState.gifts[0]).toEqual(nextState.gifts[0]);
-    expect(initialState.gifts[0]).toBe(nextState.gifts[0]);
+    expect(initialState.gifts[id]).toEqual(nextState.gifts[id]);
+    expect(initialState.gifts[id]).toBe(nextState.gifts[id]);
     expect(initialState).toBe(nextState);
   });
 });
 
 describe("can add a book async", () => {
+  const id = "0201558025";
   test("can add math book", async () => {
     const nextState = await giftsReducer(initialState, {
       type: "ADD_BOOK",
-      book: await getBookDetails("0201558025"),
+      book: await getBookDetails(id),
     });
-    expect(nextState.gifts[2].description).toBe("Concrete mathematics");
+    expect(nextState.gifts[id].description).toBe("Concrete mathematics");
   });
 
   test("can add two books in parallel", async () => {
@@ -115,25 +119,26 @@ describe("can add a book async", () => {
     const addBook1 = { type: "ADD_BOOK", book: await promise1 };
     const addBook2 = { type: "ADD_BOOK", book: await promise2 };
     const nextState = [addBook1, addBook2].reduce(giftsReducer, initialState);
-    expect(nextState.gifts.length).toBe(4);
+    expect(Object.keys(nextState.gifts).length).toBe(4);
   });
 });
 
 describe("reserving an unreserved gift with patches", () => {
+  const id = "egghead_subscription";
   const [nextState, patches] = patchGeneratingGiftsReducer(initialState, {
     type: "TOGGLE_RESERVATION",
-    id: "egghead_subscription",
+    id,
   });
 
   test("correctly stores reservedBy", () => {
-    expect(nextState.gifts[1].reservedBy).toBe(1);
+    expect(nextState.gifts[id].reservedBy).toBe(1);
   });
 
   test("generates the correct patches", () => {
     expect(patches).toEqual([
       {
         op: "replace",
-        path: ["gifts", 1, "reservedBy"],
+        path: ["gifts", id, "reservedBy"],
         value: 1,
       },
     ]);

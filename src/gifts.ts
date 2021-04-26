@@ -26,7 +26,7 @@ interface User {
 export interface State {
   readonly users: readonly User[];
   readonly currentUser: User;
-  readonly gifts: readonly Gift[];
+  gifts: { [id: string]: Gift };
 }
 
 interface Book {
@@ -60,11 +60,11 @@ const giftsRecipe = (
   switch (action.type) {
     case "ADD_GIFT":
       const { id, description, image } = action;
-      draft.gifts.push({ id, description, image, reservedBy: undefined });
+      draft.gifts[id] = { id, description, image, reservedBy: undefined };
       break;
     case "TOGGLE_RESERVATION": {
       const { id } = action;
-      const gift = draft.gifts.find((gift) => gift.id === id);
+      const gift = draft.gifts[id];
       if (!gift) return;
       gift.reservedBy =
         gift.reservedBy === undefined
@@ -77,12 +77,12 @@ const giftsRecipe = (
     }
     case "ADD_BOOK":
       const { book } = action;
-      draft.gifts.push({
+      draft.gifts[book.identifiers.isbn_10[0]] = {
         id: book.identifiers.isbn_10[0],
         description: book.title,
         image: book.cover.medium,
         reservedBy: undefined,
-      });
+      };
       break;
     case "RESET":
       return getInitialState();
