@@ -1,5 +1,4 @@
 import produce, { Draft } from "immer";
-//import produce, { original, createDraft, finishDraft } from "immer";
 import { allUsers, getCurrentUser } from "./misc/users";
 import defaultGifts from "./misc/gifts.json";
 
@@ -15,8 +14,8 @@ interface User {
   readonly name: string;
 }
 
-interface State {
-  readonly user: readonly User[];
+export interface State {
+  readonly users: readonly User[];
   readonly currentUser: User;
   readonly gifts: readonly Gift[];
 }
@@ -32,27 +31,42 @@ interface Book {
   };
 }
 
-export const addGift = produce(
-  (draft: Draft<State>, id: string, description: string, image: string) => {
-    draft.gifts.push({ id, description, image, reservedBy: undefined });
+export const giftsReducer = produce((draft: Draft<State>, action):
+  | State
+  | undefined => {
+  switch (action.type) {
+    case "ADD_GIFT":
+      const { id, description, image } = action;
+      draft.gifts.push({ id, description, image, reservedBy: undefined });
+      break;
+    case "TOGGLE_RESERVATION": {
+      const { id } = action;
+      const gift = draft.gifts.find((gift) => gift.id === id);
+      if (!gift) return;
+      gift.reservedBy =
+        gift.reservedBy === undefined
+          ? draft.currentUser.id
+          : //: gift.reservedBy === original(draft.currentUser).id
+          gift.reservedBy === draft.currentUser.id
+          ? undefined
+          : gift.reservedBy;
+      break;
+    }
+    case "ADD_BOOK":
+      const { book } = action;
+      draft.gifts.push({
+        id: book.isbn,
+        description: book.title,
+        image: book.cover.medium,
+        reservedBy: undefined,
+      });
+      break;
+    case "RESET":
+      return getInitialState();
   }
-);
+});
 
-export const toggleReservation = produce(
-  (draft: Draft<State>, giftId: string) => {
-    const gift = draft.gifts.find((gift) => gift.id === giftId);
-    if (!gift) return;
-    gift.reservedBy =
-      gift.reservedBy === undefined
-        ? draft.currentUser.id
-        : //: gift.reservedBy === original(draft.currentUser).id
-        gift.reservedBy === draft.currentUser.id
-        ? undefined
-        : gift.reservedBy;
-  }
-);
-
-export const getInitialState = () => ({
+export const getInitialState = (): State => ({
   users: allUsers,
   currentUser: getCurrentUser(),
   gifts: defaultGifts,
@@ -67,32 +81,3 @@ export const getBookDetails = async (isbn: string): Promise<Book> => {
   );
   return (await response.json())["ISBN:" + isbn];
 };
-
-export const addBook = produce(async (draft: Draft<State>, book: Book) => {
-  draft.gifts.push({
-    id: book.isbn,
-    description: book.title,
-    image: book.cover.medium,
-    reservedBy: undefined,
-  });
-});
-
-/*
-export const addBook = produce(async (draft, isbn) => {
-  //  const draft = createDraft(state);
-  const response = await fetch(
-    `http://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&jscmd=data&format=json`,
-    {
-      mode: "cors",
-    }
-  );
-  const book = (await response.json())["ISBN:" + isbn];
-  draft.gifts.push({
-    id: isbn,
-    description: book.title,
-    image: book.cover.medium,
-    reservedBy: undefined,
-  });
-  //  return finishDraft(draft);
-});
-*/

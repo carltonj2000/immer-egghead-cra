@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import "./misc/index.css";
 
-import { addBook, addGift, getInitialState, toggleReservation } from "./gifts";
+import { getBookDetails, getInitialState, giftsReducer } from "./gifts";
 
 const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
   return (
@@ -27,37 +27,35 @@ const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
 });
 
 const GiftList = () => {
-  const [state, stateSet] = React.useState(getInitialState());
+  const [state, dispatch] = React.useReducer(giftsReducer, getInitialState());
   const { users, gifts, currentUser } = state;
 
   const handleAdd = () => {
     const description = prompt("Gift to add");
     if (description) {
-      stateSet((state) =>
-        addGift(
-          state,
-          uuidv4(),
-          description,
-          `https://picsum.photos/id/${Math.round(Math.random() * 1000)}/200/200`
-        )
-      );
+      dispatch({
+        type: "ADD_GIFT",
+        id: uuidv4(),
+        description,
+        image: `https://picsum.photos/id/${Math.round(
+          Math.random() * 1000
+        )}/200/200`,
+      });
     }
   };
 
   const handleReserve = React.useCallback(
-    (id) => {
-      stateSet((state) => toggleReservation(state, id));
-    },
-    [stateSet]
+    (id) => dispatch({ type: "TOGGLE_RESERVATION", id }),
+    []
   );
 
-  const handleReset = () => stateSet(getInitialState());
+  const handleReset = () => dispatch({ type: "RESET" });
 
   const handleAddBook = async () => {
     const isbn = prompt("Enter ISBN number", "0201558025");
     if (isbn) {
-      const newState = await addBook(state, isbn);
-      stateSet(newState);
+      const book = await getBookDetails(isbn);
+      dispatch({ type: "ADD_BOOK", book });
     }
   };
 
