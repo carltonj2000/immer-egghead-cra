@@ -9,6 +9,7 @@ import {
   getInitialState,
   patchGeneratingGiftsReducer,
 } from "./gifts";
+import { useSocket } from "./misc/useSocket";
 
 const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
   return (
@@ -34,12 +35,24 @@ const GiftList = () => {
   const [state, stateSet] = React.useState(getInitialState());
   const { users, gifts, currentUser } = state;
 
-  const dispatch = React.useCallback((action) => {
-    stateSet((currentState) => {
-      const [nextState] = patchGeneratingGiftsReducer(currentState, action);
-      return nextState;
-    });
-  }, []);
+  const send = useSocket("ws://localhost:5001", (patches) => {
+    //
+    console.dir(patches);
+  });
+
+  const dispatch = React.useCallback(
+    (action) => {
+      stateSet((currentState) => {
+        const [nextState, patches] = patchGeneratingGiftsReducer(
+          currentState,
+          action
+        );
+        send(patches);
+        return nextState;
+      });
+    },
+    [send]
+  );
 
   const handleAdd = () => {
     const description = prompt("Gift to add");

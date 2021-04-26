@@ -64,7 +64,7 @@ const giftsRecipe = (
     case "ADD_BOOK":
       const { book } = action;
       draft.gifts.push({
-        id: book.isbn,
+        id: book.identifiers.isbn_10[0],
         description: book.title,
         image: book.cover.medium,
         reservedBy: undefined,
