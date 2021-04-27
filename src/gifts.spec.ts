@@ -125,10 +125,13 @@ describe("can add a book async", () => {
 
 describe("reserving an unreserved gift with patches", () => {
   const id = "egghead_subscription";
-  const [nextState, patches] = patchGeneratingGiftsReducer(initialState, {
-    type: "TOGGLE_RESERVATION",
-    id,
-  });
+  const [nextState, patches, inversePatches] = patchGeneratingGiftsReducer(
+    initialState,
+    {
+      type: "TOGGLE_RESERVATION",
+      id,
+    }
+  );
 
   test("correctly stores reservedBy", () => {
     expect(nextState.gifts[id].reservedBy).toBe(1);
@@ -146,6 +149,20 @@ describe("reserving an unreserved gift with patches", () => {
 
   test("replaying patches produces the same state - 1", () => {
     expect(applyPatches(initialState, patches)).toEqual(nextState);
+  });
+
+  test("rewind patches produces the initial state - 1", () => {
+    expect(applyPatches(nextState, inversePatches)).toEqual(initialState);
+  });
+
+  test("generates the correct inversePatches", () => {
+    expect(inversePatches).toEqual([
+      {
+        op: "replace",
+        path: ["gifts", id, "reservedBy"],
+        value: undefined,
+      },
+    ]);
   });
 
   test("replaying patches produces the same state - 2", () => {

@@ -34,6 +34,7 @@ const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
 
 const GiftList = () => {
   const [state, stateSet] = React.useState(getInitialState());
+  const undoStack = React.useRef([]);
   const { users, gifts, currentUser } = state;
 
   const send = useSocket("ws://localhost:5001", (patches) => {
@@ -43,12 +44,13 @@ const GiftList = () => {
   });
 
   const dispatch = React.useCallback(
-    (action) => {
+    (action, undoable = true) => {
       stateSet((currentState) => {
-        const [nextState, patches] = patchGeneratingGiftsReducer(
-          currentState,
-          action
-        );
+        const [
+          nextState,
+          patches,
+          inversePatches,
+        ] = patchGeneratingGiftsReducer(currentState, action);
         /*
         let patchesOut = patches;
         if (patches[0].value.currentUser) {
@@ -57,6 +59,7 @@ const GiftList = () => {
         }
         console.log({ patchesOut, patches });
         send(patchesOut);*/
+        if (undoable) undoStack.current.push(inversePatches);
         send(patches);
         return nextState;
       });
@@ -93,6 +96,11 @@ const GiftList = () => {
     }
   };
 
+  const handleUndo = () => {
+    if (!undoStack.current.length) return;
+    const patches = undoStack.current.pop();
+    dispatch({ type: "APPLY_PATCHES", patches }, false);
+  };
   return (
     <div className="app">
       <div className="header">
@@ -102,6 +110,9 @@ const GiftList = () => {
         <button onClick={handleAdd}>Add</button>
         <button onClick={handleAddBook}>Add Book</button>
         <button onClick={handleReset}>Reset</button>
+        <button onClick={handleUndo} disabled={!undoStack.current.length}>
+          Undo
+        </button>
       </div>
       <div className="gifts">
         {Object.keys(gifts).map((id) => (
