@@ -35,6 +35,8 @@ const Gift = React.memo(({ gift, users, currentUser, onReserve }) => {
 const GiftList = () => {
   const [state, stateSet] = React.useState(getInitialState());
   const undoStack = React.useRef([]);
+  const undoStackPointer = React.useRef(-1);
+
   const { users, gifts, currentUser } = state;
 
   const send = useSocket("ws://localhost:5001", (patches) => {
@@ -59,7 +61,11 @@ const GiftList = () => {
         }
         console.log({ patchesOut, patches });
         send(patchesOut);*/
-        if (undoable) undoStack.current.push(inversePatches);
+        if (undoable) {
+          const pointer = ++undoStackPointer.current;
+          undoStack.current.length = pointer;
+          undoStack.current[pointer] = { patches, inversePatches };
+        }
         send(patches);
         return nextState;
       });
@@ -97,10 +103,19 @@ const GiftList = () => {
   };
 
   const handleUndo = () => {
-    if (!undoStack.current.length) return;
-    const patches = undoStack.current.pop();
+    if (!undoStackPointer.current < 0) return;
+    const patches = undoStack.current[undoStackPointer.current].inversePatches;
+    undoStackPointer.current--;
     dispatch({ type: "APPLY_PATCHES", patches }, false);
   };
+
+  const handleRedo = () => {
+    if (!undoStackPointer.current === undoStack.current.length - 1) return;
+    undoStackPointer.current++;
+    const patches = undoStack.current[undoStackPointer.current].patches;
+    dispatch({ type: "APPLY_PATCHES", patches }, false);
+  };
+
   return (
     <div className="app">
       <div className="header">
@@ -110,8 +125,14 @@ const GiftList = () => {
         <button onClick={handleAdd}>Add</button>
         <button onClick={handleAddBook}>Add Book</button>
         <button onClick={handleReset}>Reset</button>
-        <button onClick={handleUndo} disabled={!undoStack.current.length}>
+        <button onClick={handleUndo} disabled={undoStackPointer.current < 0}>
           Undo
+        </button>
+        <button
+          onClick={handleRedo}
+          disabled={undoStackPointer.current === undoStack.current.length - 1}
+        >
+          Redo
         </button>
       </div>
       <div className="gifts">
